@@ -1,6 +1,6 @@
 # Tool to check Java Jdk SSL Ciphers against a SSL server.
 
-![Maven Build Workflow](https://github.com/j-blomart/JavaCheckciphers/blob/master/.github/workflows/test-package.yaml/badge.svg)
+![Maven Build Workflow](https://github.com/j-blomart/JavaCheckciphers/actions/workflows/test-package.yaml/badge.svg)
 
 ## Usage : 
 
