@@ -24,7 +24,7 @@ public class CheckciphersTest {
         } catch (InterruptedException e) { }
         assertThat(output.getOutput(), containsString("TLS_RSA_WITH_AES_256_GCM_SHA384"));
     }
-
+    /*
     @Test
     public void doCheckShowsSuccess() {
         cipherschecker.setServer("github.com");
@@ -96,5 +96,5 @@ public class CheckciphersTest {
             output.acquire();
         } catch (InterruptedException e) { }
         assertThat(output.getOutput(), containsString("Exception : javax.net.ssl.SSLHandshakeException: No appropriate protocol (protocol is disabled or cipher suites are inappropriate)"));
-    }
+    }*/
 }
