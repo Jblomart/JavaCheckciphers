@@ -10,7 +10,6 @@ package tshooting;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -294,7 +293,7 @@ public class Checkciphers
      * 
      * <P> Note : uses a semaphore to avoid overlap in exception processing and in ssl handshake completed event.
      * 
-     * @param cipher <code>String</code> String representation of the cipher to check.
+     * @param cipher <code>Map.Entry<String,Boolean></code> String representation of the cipher to check.
      */
     private static void docheck(Map.Entry<String,Boolean> cipher) {
         if(Boolean.TRUE.equals(cipher.getValue())) {
@@ -303,12 +302,17 @@ public class Checkciphers
                 available.acquire();
             } catch (InterruptedException e1) {  }
 
+            // get the cipher string representation from input map.
             String cipherstr = (String) cipher.getKey();
+
+            // if we have a Server configured then check this cipher agains the server.
             if (server != null) {
+
                 if (!summary) {
                     System.out.println("- trying to connect using " + cipherstr + " :");
                 }
                 try {
+                    // if a custom CA was provided read it a store in certs Certificate list
                     if (customca) {
                         CertificateFactory fac = CertificateFactory.getInstance("X509");
                         FileInputStream is = new FileInputStream(cafile);
@@ -322,9 +326,9 @@ public class Checkciphers
                             System.out.println("    Certificate Valid To : " + certs[0].getNotAfter());
                         }
                     }
-                    String[] enabledciphers = {cipherstr};
-                    SSLSocketFactory sslsocketfactory = null;
 
+                    // create the ssl socket factory with possiblity to trust all certs or to set custom CA to validate certs.
+                    SSLSocketFactory sslsocketfactory = null;
                     if (untrusted || customca) {
                         TrustManager[] trustCerts;
                         if (untrusted) {
@@ -351,6 +355,7 @@ public class Checkciphers
                         
                     }
 
+                    // create the ssl socket and add handshake completed listener (to know if handshake succeeded)
                     SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket(server, port);
                     sslsocket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
                         @Override
@@ -379,7 +384,7 @@ public class Checkciphers
                         }
                     });
                     
-
+                    // set ssl parameters to enable or disable endpoint identification and possibly set Tls version.
                     SSLParameters sslparams = new SSLParameters();
                     if (untrusted || nohostnameval) {
                         sslparams.setEndpointIdentificationAlgorithm(null);
@@ -387,20 +392,19 @@ public class Checkciphers
                         sslparams.setEndpointIdentificationAlgorithm("HTTPS");
                     }
                     sslsocket.setSSLParameters(sslparams);
+                    String[] enabledciphers = {cipherstr};
                     sslsocket.setEnabledCipherSuites(enabledciphers);
                     if (tlsversion != null) {
                         sslsocket.setEnabledProtocols(new String[] {tlsversion});
                     }
 
-                    InputStream in = sslsocket.getInputStream();
+                    // open the socket
                     OutputStream out = sslsocket.getOutputStream();
 
-                    // Write a test byte to get a reaction :)
+                    // Write a test byte to get a reaction, confirms if the socket is opened (could have received RST).
                     out.write(1);
 
-                    while (in.available() > 0) {
-                        System.out.print(in.read());
-                    }
+                    // Write outputs to stdout.
                     if (!summary) {
                         System.out.println("  Successfully connected.");
                     } else {
@@ -411,6 +415,7 @@ public class Checkciphers
                         }
                     }
                 } catch (ConnectException exception) {
+                    // We failed to connect to the server. Exit completely , no need to check other ciphers it's dead.
                     if (verbose) {
                         System.out.println("  Failed to connect.");
                         System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
@@ -419,6 +424,8 @@ public class Checkciphers
                     }
                     System.exit(1);
                 } catch (SocketException exception) {
+                    // We most probably had a closed socket when we tried to write to it. Possibly RST received from server.
+                    // Release the semaphore at the end of this as we will continue testing other ciphers.
                     if (!summary && verbose) {
                         System.out.println("  Failed socket.");
                         System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
@@ -433,6 +440,8 @@ public class Checkciphers
                     }
                     available.release();
                 } catch (SSLHandshakeException exception) {
+                    // SSL handshake failed.
+                    // Release the semaphore at the end of this as we will continue testing other ciphers.
                     if (!summary && verbose) {
                         System.out.println("  Failed handshake.");
                         System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
@@ -447,6 +456,7 @@ public class Checkciphers
                     }
                     available.release();
                 } catch (CertificateParsingException exception) {
+                    // Could not parse the custom CA file passed through arguments. Exit completely , no need to check other ciphers it's dead.
                     if (verbose) {
                         System.out.println("  Failed custom CA certificate format invalid.");
                         System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
@@ -455,6 +465,7 @@ public class Checkciphers
                     }
                     System.exit(1);    
                 } catch (Exception exception) {
+                    // We received an exception that we did not excpet. Exit completely , no need to check other ciphers it's dead.
                     if (verbose) {
                         System.out.println("  Failed uncatched exception.");
                         System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
@@ -464,6 +475,7 @@ public class Checkciphers
                     System.exit(1);
                 }
             } else {
+                // just list the cipher in stdout.
                 System.out.println("- " + cipherstr);
             }
         }
@@ -475,6 +487,8 @@ public class Checkciphers
     private static void dochecks() {
         // list available ciphers
         SSLServerSocketFactory ssf = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
+
+        // list available and default ciphers.
         String[] defaultCiphers = ssf.getDefaultCipherSuites();
         String[] availableCiphers = ssf.getSupportedCipherSuites();
         for(int i=0; i<availableCiphers.length; ++i )
@@ -493,11 +507,13 @@ public class Checkciphers
             }
         }
 
+        // check eatch ciphers listed.
         for(Iterator<Map.Entry<String,Boolean>> i = ciphers.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry<String,Boolean> cipher=(Map.Entry<String,Boolean>) i.next();
             docheck(cipher);
         }
 
+        // output summary to stdout easier to list working ciphers this way.
         if (summary) {
             for(Iterator<Entry<String, List<String>>> i = results.entrySet().iterator(); i.hasNext();) {
                 Entry<String,List<String>> result = (Entry<String,List<String>>) i.next();
@@ -524,6 +540,7 @@ public class Checkciphers
      */
     public static void main(String[] args)
     {
+        // parse the command line arguments and print help if needed.
         try {
             checkargs(args);
         } catch (IllegalArgumentException exception){
@@ -532,6 +549,7 @@ public class Checkciphers
             showusage();
             System.exit(1);
         }
+        // do the ciphers checks
         dochecks();
     }
 }
