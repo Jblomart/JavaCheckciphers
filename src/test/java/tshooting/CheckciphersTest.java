@@ -37,6 +37,7 @@ public class CheckciphersTest {
         assertThat(output.getOutput(), containsString("Successfully connected."));
     }
     
+    /* 
     @Test
     public void doCheckShowsSuccessPeerCerts() {
         cipherschecker.setServer("github.com");
@@ -48,6 +49,7 @@ public class CheckciphersTest {
         } catch (InterruptedException e) {}
         assertThat(output.getOutput(), containsString("Peer Certificates :"));
     }
+    */
     
     @Test
     public void doCheckShowsTimeoutFailure() {
