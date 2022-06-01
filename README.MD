@@ -2,7 +2,7 @@
 
 ## Usage : 
 
-Command : `java -jar Cipherscheck.jar -h`
+Command : `java -jar check-ciphers-0.1.0.jar -h`
 
 Outputs : 
 ```
