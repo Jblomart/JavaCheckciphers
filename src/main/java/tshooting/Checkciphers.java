@@ -91,6 +91,7 @@ final class HandShakeListener implements HandshakeCompletedListener {
 */
 public class Checkciphers
 {
+    static Integer timeout = 1000;
     static String server =  null;
     static Boolean verbose = Boolean.FALSE;
     static Boolean untrusted = Boolean.FALSE;
@@ -299,6 +300,20 @@ public class Checkciphers
                         case "help":
                             showusage();
                             System.exit(0);
+                            break;
+                        case "timeout":
+                            if (args.length > i && args[i+1].charAt(0) != '-') {
+                                try {
+                                    timeout = Integer.parseInt(args[i+1]);
+                                } catch ( NumberFormatException e) {
+                                    throw new IllegalArgumentException("Timeout argument needs an Integer input.");
+                                }
+
+                            } else {
+                                throw new IllegalArgumentException("Timeout argument needs an Integer input. No input found.");
+                            }
+                            i+=1;
+                            break;
                         default:
                             throw new IllegalArgumentException("Unexpected argument " + arg + ".");
                     }
@@ -410,6 +425,7 @@ public class Checkciphers
                     // create the ssl socket and add handshake completed listener (to know if handshake succeeded)
                     SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket(server, port);
                     sslsocket.addHandshakeCompletedListener(new HandShakeListener(output));
+                    sslsocket.setSoTimeout(1000);
                     
                     // set ssl parameters to enable or disable endpoint identification and possibly set Tls version.
                     SSLParameters sslparams = new SSLParameters();
