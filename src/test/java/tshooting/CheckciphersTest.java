@@ -24,7 +24,7 @@ public class CheckciphersTest {
         } catch (InterruptedException e) { }
         assertThat(output.getOutput(), containsString("TLS_RSA_WITH_AES_256_GCM_SHA384"));
     }
-    /*
+    
     @Test
     public void doCheckShowsSuccess() {
         cipherschecker.setServer("github.com");
@@ -37,6 +37,7 @@ public class CheckciphersTest {
         assertThat(output.getOutput(), containsString("Successfully connected."));
     }
 
+    /*
     @Test
     public void doCheckShowsSuccessPeerCerts() {
         cipherschecker.setServer("github.com");
