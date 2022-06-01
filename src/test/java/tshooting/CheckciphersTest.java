@@ -50,7 +50,7 @@ public class CheckciphersTest {
     }
     
     @Test
-    public void doCheckShowsSocketTimeoutFailure() {
+    public void doCheckShowsTimeoutFailure() {
         cipherschecker.setServer("github.com");
         cipherschecker.setTimeout(1);
         CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
@@ -60,7 +60,7 @@ public class CheckciphersTest {
             output.acquire();
         } catch (InterruptedException e) {}
         cipherschecker.setTimeout(1000);
-        assertThat(output.getOutput(), containsString("Exception : java.net.SocketTimeoutException: Read timed out"));
+        assertThat(output.getOutput(), containsString("Exception : javax.net.ssl.SSLException: Read timed out"));
 
     }
 
