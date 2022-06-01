@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Map.Entry;
-import java.util.concurrent.Semaphore;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.ArrayList;
@@ -49,6 +48,39 @@ import java.security.cert.Certificate;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 
+final class HandShakeListener implements HandshakeCompletedListener {
+    CheckResult result;
+
+    public HandShakeListener(CheckResult result) {
+        this.result = result;
+    }
+
+    @Override
+    public void handshakeCompleted(HandshakeCompletedEvent hce) {
+        if (!this.result.getSummary() && this.result.getVerbose()) {
+            this.result.appendOutputStr("  Handshake Succeeded.");
+            this.result.appendOutputStr("  Peer Certificates :");
+            try {
+                Certificate[] peercerts = hce.getPeerCertificates();
+                for (Integer j = 0; j < peercerts.length; j++){
+                    X509Certificate pcert = (X509Certificate) peercerts[j];
+                    if (j != 0) {
+                        this.result.appendOutputStr("  ----");
+                    }
+                    this.result.appendOutputStr("    Peer Certificate subject Principal : " + pcert.getSubjectX500Principal());
+                    this.result.appendOutputStr("    Peer Certificate Subject Alertnate Names :" + pcert.getSubjectAlternativeNames());
+                    this.result.appendOutputStr("    Peer Certificate Issuer : " + pcert.getIssuerX500Principal());
+                    this.result.appendOutputStr("    Peer Certificate Valid From : " + pcert.getNotBefore());
+                    this.result.appendOutputStr("    Peer Certificate Valid To : " + pcert.getNotAfter());
+                }
+            } catch (SSLPeerUnverifiedException e) { 
+            } catch (CertificateParsingException e) { }
+            this.result.appendOutputStr("  Tls Version : " + hce.getSession().getProtocol());
+        }
+        this.result.getAvailable().release();
+    }
+}
+
 /**
 * Checkciphers.
 * 
@@ -59,9 +91,6 @@ import java.security.cert.X509Certificate;
 */
 public class Checkciphers
 {
-    private static final Integer MAX_RUNS = 1;
-    private static final Semaphore available = new Semaphore(MAX_RUNS, Boolean.TRUE);
-    
     static String server =  null;
     static Boolean verbose = Boolean.FALSE;
     static Boolean untrusted = Boolean.FALSE;
@@ -75,7 +104,32 @@ public class Checkciphers
     static TreeMap<String, Boolean> ciphers = new TreeMap<String, Boolean>();
     static X509Certificate[] certs = null;
     static TreeMap<String,List<String>> results = new TreeMap<String,List<String>>();
-    
+
+    public void setServer(String in_server) {
+        server = in_server;
+    }
+
+    public void setPort(Integer in_port) {
+        port = in_port;
+    }
+
+    public void setUntrusted(Boolean in_untrusted) {
+        untrusted = in_untrusted;
+    }
+
+    public void setendpointIdentification(Boolean in_endpointIdentification) {
+        nohostnameval = in_endpointIdentification;
+    }
+
+    public void setTlsVersion(String in_tlsversion) {
+        tlsversion = in_tlsversion;
+    }
+
+    public void setCa(String in_cafile) {
+        customca = Boolean.TRUE;
+        cafile = in_cafile;
+    }
+
     /**
      * Convert a stacktrace to string.
      * 
@@ -295,21 +349,19 @@ public class Checkciphers
      * 
      * @param cipher <code>Map.Entry<String,Boolean></code> String representation of the cipher to check.
      */
-    private static void docheck(Map.Entry<String,Boolean> cipher) {
+    public static void docheck(Map.Entry<String,Boolean> cipher, CheckResult output) {
         if(Boolean.TRUE.equals(cipher.getValue())) {
-            // block till we know the handshake succeeded or failed.
-            try {
-                available.acquire();
-            } catch (InterruptedException e1) {  }
-
             // get the cipher string representation from input map.
             String cipherstr = (String) cipher.getKey();
-
             // if we have a Server configured then check this cipher agains the server.
             if (server != null) {
+                // block till we know the handshake succeeded or failed.
+                try {
+                    output.acquire();
+                } catch (InterruptedException e) {  }
 
-                if (!summary) {
-                    System.out.println("- trying to connect using " + cipherstr + " :");
+                if (!output.getSummary()) {
+                    output.appendOutputStr("- trying to connect using " + cipherstr + " :");
                 }
                 try {
                     // if a custom CA was provided read it a store in certs Certificate list
@@ -317,13 +369,13 @@ public class Checkciphers
                         CertificateFactory fac = CertificateFactory.getInstance("X509");
                         FileInputStream is = new FileInputStream(cafile);
                         certs = new X509Certificate[] {(X509Certificate) fac.generateCertificate(is)};
-                        if (!summary && verbose) {
-                            System.out.println("  Custom CA provided : using only provided CA for Certificate validation.");
-                            System.out.println("    Certificate subject Principal : " + certs[0].getSubjectX500Principal());
-                            System.out.println("    Certificate Subject Alertnate Names : " + certs[0].getSubjectAlternativeNames());
-                            System.out.println("    Certificate Issuer : " + certs[0].getIssuerX500Principal());
-                            System.out.println("    Certificate Valid From : " + certs[0].getNotBefore());
-                            System.out.println("    Certificate Valid To : " + certs[0].getNotAfter());
+                        if (!output.getSummary() && output.getVerbose()) {
+                            output.appendOutputStr("  Custom CA provided : using only provided CA for Certificate validation.");
+                            output.appendOutputStr("    Certificate subject Principal : " + certs[0].getSubjectX500Principal());
+                            output.appendOutputStr("    Certificate Subject Alertnate Names : " + certs[0].getSubjectAlternativeNames());
+                            output.appendOutputStr("    Certificate Issuer : " + certs[0].getIssuerX500Principal());
+                            output.appendOutputStr("    Certificate Valid From : " + certs[0].getNotBefore());
+                            output.appendOutputStr("    Certificate Valid To : " + certs[0].getNotAfter());
                         }
                     }
 
@@ -332,8 +384,8 @@ public class Checkciphers
                     if (untrusted || customca) {
                         TrustManager[] trustCerts;
                         if (untrusted) {
-                            if (!summary && verbose) {
-                                System.out.println("  Untrusted mode : disabling Certificate validations.");
+                            if (!output.getSummary() && output.getVerbose()) {
+                                output.appendOutputStr("  Untrusted mode : disabling Certificate validations.");
                             }
                         }
                         trustCerts = new TrustManager[] { new X509TrustManager() {
@@ -357,32 +409,7 @@ public class Checkciphers
 
                     // create the ssl socket and add handshake completed listener (to know if handshake succeeded)
                     SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket(server, port);
-                    sslsocket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
-                        @Override
-                        public void handshakeCompleted(HandshakeCompletedEvent hce) {
-                            if (!summary && verbose) {
-                                System.out.println("  Handshake Succeeded.");
-                                System.out.println("  Peer Certificates :");
-                                try {
-                                    Certificate[] peercerts = hce.getPeerCertificates();
-                                    for (Integer j = 0; j < peercerts.length; j++){
-                                        X509Certificate pcert = (X509Certificate) peercerts[j];
-                                        if (j != 0) {
-                                            System.out.println("  ----");
-                                        }
-                                        System.out.println("    Peer Certificate subject Principal : " + pcert.getSubjectX500Principal());
-                                        System.out.println("    Peer Certificate Subject Alertnate Names :" + pcert.getSubjectAlternativeNames());
-                                        System.out.println("    Peer Certificate Issuer : " + pcert.getIssuerX500Principal());
-                                        System.out.println("    Peer Certificate Valid From : " + pcert.getNotBefore());
-                                        System.out.println("    Peer Certificate Valid To : " + pcert.getNotAfter());
-                                    }
-                                } catch (SSLPeerUnverifiedException e) { 
-                                } catch (CertificateParsingException e) { }
-                                System.out.println("  Tls Version : " + hce.getSession().getProtocol());
-                            }
-                            available.release();
-                        }
-                    });
+                    sslsocket.addHandshakeCompletedListener(new HandShakeListener(output));
                     
                     // set ssl parameters to enable or disable endpoint identification and possibly set Tls version.
                     SSLParameters sslparams = new SSLParameters();
@@ -404,9 +431,9 @@ public class Checkciphers
                     // Write a test byte to get a reaction, confirms if the socket is opened (could have received RST).
                     out.write(1);
 
-                    // Write outputs to stdout.
-                    if (!summary) {
-                        System.out.println("  Successfully connected.");
+                    // Write outputs to output string.
+                    if (!output.getSummary()) {
+                        output.appendOutputStr("  Successfully connected.");
                     } else {
                         if (results.get("Successfully connected") != null) {
                             results.get("Successfully connected").add(cipherstr);
@@ -416,67 +443,67 @@ public class Checkciphers
                     }
                 } catch (ConnectException exception) {
                     // We failed to connect to the server. Exit completely , no need to check other ciphers it's dead.
-                    if (verbose) {
-                        System.out.println("  Failed to connect.");
-                        System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
+                    if (output.getVerbose()) {
+                        output.appendOutputStr("  Failed to connect.");
+                        output.appendOutputStr("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
                     } else {
-                        System.out.println("  Failed to connect. (" + exception + ")");
+                        output.appendOutputStr("  Failed to connect. (" + exception + ")");
                     }
-                    System.exit(1);
+                    output.setFatalException();
                 } catch (SocketException exception) {
                     // We most probably had a closed socket when we tried to write to it. Possibly RST received from server.
                     // Release the semaphore at the end of this as we will continue testing other ciphers.
-                    if (!summary && verbose) {
-                        System.out.println("  Failed socket.");
-                        System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
-                    } else if (summary) {
+                    if (!output.getSummary() && output.getVerbose()) {
+                        output.appendOutputStr("  Failed socket.");
+                        output.appendOutputStr("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
+                    } else if (output.getSummary()) {
                         if (results.get(exception.toString()) != null) {
                             results.get(exception.toString()).add(cipherstr);
                         } else {
                             results.put(exception.toString(),new ArrayList<>(Arrays.asList(cipherstr)));
                         }
                     } else {
-                        System.out.println("  Failed to connect. (" + exception + ")");
+                        output.appendOutputStr("  Failed to connect. (" + exception + ")");
                     }
-                    available.release();
+                    output.release();
                 } catch (SSLHandshakeException exception) {
                     // SSL handshake failed.
                     // Release the semaphore at the end of this as we will continue testing other ciphers.
-                    if (!summary && verbose) {
-                        System.out.println("  Failed handshake.");
-                        System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
-                    } else if (summary) {
+                    if (!output.getSummary() && output.getVerbose()) {
+                        output.appendOutputStr("  Failed handshake.");
+                        output.appendOutputStr("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
+                    } else if (output.getSummary()) {
                         if (results.get(exception.toString()) != null) {
                             results.get(exception.toString()).add(cipherstr);
                         } else {
                             results.put(exception.toString(),new ArrayList<>(Arrays.asList(cipherstr)));
                         }
                     } else {
-                        System.out.println("  Failed to connect. (" + exception + ")");
+                        output.appendOutputStr("  Failed to connect. (" + exception + ")");
                     }
-                    available.release();
+                    output.release();
                 } catch (CertificateParsingException exception) {
                     // Could not parse the custom CA file passed through arguments. Exit completely , no need to check other ciphers it's dead.
-                    if (verbose) {
-                        System.out.println("  Failed custom CA certificate format invalid.");
-                        System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
+                    if (output.getVerbose()) {
+                        output.appendOutputStr("  Failed custom CA certificate format invalid.");
+                        output.appendOutputStr("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
                     } else {
-                        System.out.println("  Failed to connect. (" + exception + ")");
+                        output.appendOutputStr("  Failed to connect. (" + exception + ")");
                     }
-                    System.exit(1);    
+                    output.setFatalException();   
                 } catch (Exception exception) {
                     // We received an exception that we did not excpet. Exit completely , no need to check other ciphers it's dead.
-                    if (verbose) {
-                        System.out.println("  Failed uncatched exception.");
-                        System.out.println("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
+                    if (output.getVerbose()) {
+                        output.appendOutputStr("  Failed uncatched exception.");
+                        output.appendOutputStr("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
                     } else {
-                        System.out.println("  Failed to connect. (" + exception + ")");
+                        output.appendOutputStr("  Failed to connect. (" + exception + ")");
                     }
-                    System.exit(1);
+                    output.setFatalException();
                 }
             } else {
                 // just list the cipher in stdout.
-                System.out.println("- " + cipherstr);
+                output.appendOutputStr("- " + cipherstr);
             }
         }
     }
@@ -507,10 +534,20 @@ public class Checkciphers
             }
         }
 
-        // check eatch ciphers listed.
+        // check each ciphers listed.
         for(Iterator<Map.Entry<String,Boolean>> i = ciphers.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry<String,Boolean> cipher=(Map.Entry<String,Boolean>) i.next();
-            docheck(cipher);
+            CheckResult output = new CheckResult(summary, verbose);
+            docheck(cipher,output);
+            try {
+                output.acquire();
+            } catch (InterruptedException e) { }
+            if (output.getOutput().length() > 0) {
+                System.out.println(output.getOutput());
+            }
+            if (output.getFatalException()) {
+                System.exit(1);
+            }
         }
 
         // output summary to stdout easier to list working ciphers this way.
