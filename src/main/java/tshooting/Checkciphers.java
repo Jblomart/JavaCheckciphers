@@ -29,6 +29,7 @@ import java.util.Arrays;
 
 import java.net.ConnectException;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import javax.net.ssl.HandshakeCompletedEvent;
 import javax.net.ssl.HandshakeCompletedListener;
@@ -129,6 +130,10 @@ public class Checkciphers
     public void setCa(String in_cafile) {
         customca = Boolean.TRUE;
         cafile = in_cafile;
+    }
+
+    public void setTimeout(Integer in_timeout) {
+        timeout = in_timeout;
     }
 
     /**
@@ -308,7 +313,6 @@ public class Checkciphers
                                 } catch ( NumberFormatException e) {
                                     throw new IllegalArgumentException("Timeout argument needs an Integer input.");
                                 }
-
                             } else {
                                 throw new IllegalArgumentException("Timeout argument needs an Integer input. No input found.");
                             }
@@ -341,6 +345,7 @@ public class Checkciphers
         System.out.println("-h|--help\t\t\toptional\tPrint this help message.");
         System.out.println("--no-endpoint-identification\toptional\tDo not check dns name or Certificate Subject Alternative Names.");
         System.out.println("--summary\t\t\toptional\tOutput summary only.");
+        System.out.println("--timeout\t\t\toptional\tTimeout for connections in ms. Default value 1000 ms.");
     }
 
     /**
@@ -418,14 +423,13 @@ public class Checkciphers
                         sslsocketfactory = (SSLSocketFactory) sc.getSocketFactory();
                         SSLSocketFactory.getDefault();
                     } else {
-                        sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-                        
+                        sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();   
                     }
 
                     // create the ssl socket and add handshake completed listener (to know if handshake succeeded)
                     SSLSocket sslsocket = (SSLSocket) sslsocketfactory.createSocket(server, port);
                     sslsocket.addHandshakeCompletedListener(new HandShakeListener(output));
-                    sslsocket.setSoTimeout(1000);
+                    sslsocket.setSoTimeout(timeout);
                     
                     // set ssl parameters to enable or disable endpoint identification and possibly set Tls version.
                     SSLParameters sslparams = new SSLParameters();
@@ -506,7 +510,16 @@ public class Checkciphers
                     } else {
                         output.appendOutputStr("  Failed to connect. (" + exception + ")");
                     }
-                    output.setFatalException();   
+                    output.setFatalException();  
+                } catch (UnknownHostException exception) {
+                    // Could resolve host for provided server. Exit completely , no need to check other ciphers it's dead.
+                    if (output.getVerbose()) {
+                        output.appendOutputStr("  Could not resolve " + server + ".");
+                        output.appendOutputStr("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
+                    } else {
+                        output.appendOutputStr("  Failed to connect. (" + exception + ")");
+                    }
+                    output.setFatalException();
                 } catch (Exception exception) {
                     // We received an exception that we did not excpet. Exit completely , no need to check other ciphers it's dead.
                     if (output.getVerbose()) {
@@ -553,7 +566,7 @@ public class Checkciphers
         // check each ciphers listed.
         for(Iterator<Map.Entry<String,Boolean>> i = ciphers.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry<String,Boolean> cipher=(Map.Entry<String,Boolean>) i.next();
-            CheckResult output = new CheckResult(summary, verbose);
+            CheckResult output = new CheckResult(summary, verbose, timeout);
             docheck(cipher,output);
             try {
                 output.acquire();
@@ -564,6 +577,7 @@ public class Checkciphers
             if (output.getFatalException()) {
                 System.exit(1);
             }
+            output.release();
         }
 
         // output summary to stdout easier to list working ciphers this way.

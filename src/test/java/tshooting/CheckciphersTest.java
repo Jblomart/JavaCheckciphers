@@ -16,73 +16,88 @@ public class CheckciphersTest {
     
     @Test
     public void doCheckShowsCipher() {
-        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE);
+        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
         Entry<String,Boolean> cipher = new AbstractMap.SimpleEntry<String,Boolean>("TLS_RSA_WITH_AES_256_GCM_SHA384",Boolean.TRUE);
         cipherschecker.docheck(cipher,output);
         try {
             output.acquire();
-        } catch (InterruptedException e) { }
+        } catch (InterruptedException e) {}
         assertThat(output.getOutput(), containsString("TLS_RSA_WITH_AES_256_GCM_SHA384"));
     }
     
     @Test
     public void doCheckShowsSuccess() {
         cipherschecker.setServer("github.com");
-        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE);
+        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
         Entry<String,Boolean> cipher = new AbstractMap.SimpleEntry<String,Boolean>("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",Boolean.TRUE);
         cipherschecker.docheck(cipher,output);
         try {
             output.acquire();
-        } catch (InterruptedException e) { }
+        } catch (InterruptedException e) {}
         assertThat(output.getOutput(), containsString("Successfully connected."));
     }
-
+    
     @Test
     public void doCheckShowsSuccessPeerCerts() {
         cipherschecker.setServer("github.com");
-        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE);
+        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
         Entry<String,Boolean> cipher = new AbstractMap.SimpleEntry<String,Boolean>("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",Boolean.TRUE);
         cipherschecker.docheck(cipher,output);
         try {
             output.acquire();
-        } catch (InterruptedException e) { }
+        } catch (InterruptedException e) {}
         assertThat(output.getOutput(), containsString("Peer Certificates :"));
     }
     
     @Test
-    public void doCheckShowsSocketFailure() {
-        cipherschecker.setServer("githubX.com");
-        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE);
+    public void doCheckShowsSocketTimeoutFailure() {
+        cipherschecker.setServer("github.com");
+        cipherschecker.setTimeout(1);
+        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
         Entry<String,Boolean> cipher = new AbstractMap.SimpleEntry<String,Boolean>("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",Boolean.TRUE);
         cipherschecker.docheck(cipher,output);
         try {
             output.acquire();
-        } catch (InterruptedException e) { }
-        assertThat(output.getOutput(), containsString("Exception : java.net.SocketException: Connection reset"));
+        } catch (InterruptedException e) {}
+        cipherschecker.setTimeout(1000);
+        assertThat(output.getOutput(), containsString("Exception : java.net.SocketTimeoutException: Read timed out"));
+
     }
 
-    /*
+    @Test
+    public void doCheckShowsSocketResetFailure() {
+        cipherschecker.setServer("githubX.com");
+        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
+        Entry<String,Boolean> cipher = new AbstractMap.SimpleEntry<String,Boolean>("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",Boolean.TRUE);
+        cipherschecker.docheck(cipher,output);
+        try {
+            output.acquire();
+        } catch (InterruptedException e) {}
+        assertThat(output.getOutput(), containsString("Exception : java.net.UnknownHostException"));
+
+    }
+    
     @Test
     public void doCheckShowsTlsNoCiphersFailure() {
         cipherschecker.setServer("github.com");
-        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE);
+        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
         Entry<String,Boolean> cipher = new AbstractMap.SimpleEntry<String,Boolean>("TLS_EMPTY_RENEGOTIATION_INFO_SCSV",Boolean.TRUE);
         cipherschecker.docheck(cipher,output);
         try {
             output.acquire();
-        } catch (InterruptedException e) { }
+        } catch (InterruptedException e) {}
         assertThat(output.getOutput(), containsString("Exception : javax.net.ssl.SSLHandshakeException: No negotiable cipher suite"));
     }
 
     @Test
     public void doCheckShowsHandshakeFailure() {
         cipherschecker.setServer("github.com");
-        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE);
+        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
         Entry<String,Boolean> cipher = new AbstractMap.SimpleEntry<String,Boolean>("TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",Boolean.TRUE);
         cipherschecker.docheck(cipher,output);
         try {
             output.acquire();
-        } catch (InterruptedException e) { }
+        } catch (InterruptedException e) {}
         assertThat(output.getOutput(), containsString("Exception : javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure"));
     }
 
@@ -90,12 +105,13 @@ public class CheckciphersTest {
     public void doCheckShowsNoProtocolsFailure() {
         cipherschecker.setServer("github.com");
         cipherschecker.setTlsVersion("SSLv3");
-        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE);
+        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
         Entry<String,Boolean> cipher = new AbstractMap.SimpleEntry<String,Boolean>("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",Boolean.TRUE);
         cipherschecker.docheck(cipher,output);
         try {
             output.acquire();
-        } catch (InterruptedException e) { }
+        } catch (InterruptedException e) {}
         assertThat(output.getOutput(), containsString("Exception : javax.net.ssl.SSLHandshakeException: No appropriate protocol (protocol is disabled or cipher suites are inappropriate)"));
-    }*/
+    }
+    
 }

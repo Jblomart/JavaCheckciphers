@@ -1,6 +1,7 @@
 package tshooting;
 
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class CheckResult {
     private static final Integer MAX_RUNS = 1;
@@ -10,11 +11,13 @@ public class CheckResult {
     private Boolean summary;
     private Boolean verbose;
     private Boolean fatalException;
+    private Integer timeout;
 
-    public CheckResult(Boolean summary, Boolean verbose) {
+    public CheckResult(Boolean summary, Boolean verbose, Integer timeout) {
         this.outputstr = "";
         this.summary = summary;
         this.verbose = verbose;
+        this.timeout = timeout;
         this.fatalException = Boolean.FALSE;
     }
 
@@ -48,7 +51,7 @@ public class CheckResult {
     }
 
     public void acquire() throws InterruptedException { 
-        this.available.acquire();
+        this.available.tryAcquire(timeout,TimeUnit.MILLISECONDS);
     }
 
     public void release() {
@@ -56,6 +59,6 @@ public class CheckResult {
     }
 
     public void semaphoreWait() throws InterruptedException {
-        this.available.wait();
+        this.available.wait(timeout);
     }
 }
