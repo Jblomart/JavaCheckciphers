@@ -49,7 +49,6 @@ public class CheckciphersTest {
         assertThat(output.getOutput(), containsString("Peer Certificates :"));
     }
     
-    /*
     @Test
     public void doCheckShowsSocketFailure() {
         cipherschecker.setServer("githubX.com");
@@ -62,6 +61,7 @@ public class CheckciphersTest {
         assertThat(output.getOutput(), containsString("Exception : java.net.SocketException: Connection reset"));
     }
 
+    /*
     @Test
     public void doCheckShowsTlsNoCiphersFailure() {
         cipherschecker.setServer("github.com");
