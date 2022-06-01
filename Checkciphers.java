@@ -238,7 +238,7 @@ public class Checkciphers
                                 X509Certificate cert = (X509Certificate) fac.generateCertificate(is);
                                 trustCerts = new TrustManager[] { new X509TrustManager() {
                                     public X509Certificate[] getAcceptedIssuers() {
-                                        return null;
+                                        return new X509Certificate[] {cert} ;
                                     }
                                     public void checkClientTrusted(X509Certificate[] certs, String authType) {
                                     }
