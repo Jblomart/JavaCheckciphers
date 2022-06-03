@@ -435,7 +435,7 @@ public class Checkciphers
      * 
      * @param cipher <code>Map.Entry<String,Boolean></code> String representation of the cipher to check.
      */
-    public static void docheck(Map.Entry<String,Boolean> cipher, CheckResult output) {
+    public void docheck(Map.Entry<String,Boolean> cipher, CheckResult output) {
         if(Boolean.TRUE.equals(cipher.getValue())) {
             // get the cipher string representation from input map.
             String cipherstr = (String) cipher.getKey();
@@ -617,7 +617,7 @@ public class Checkciphers
     /**
      * Lists ciphers present in the Java Jdk and calls docheck for each of them.
      */
-    private static void dochecks() {
+    private void dochecks() {
         // list available ciphers
         SSLServerSocketFactory ssf = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
 
@@ -682,7 +682,7 @@ public class Checkciphers
      * 
      * @param args <code>String[]</code> Command line arguments.
      */
-    public static void main(String[] args)
+    public void main(String[] args)
     {
         // parse the command line arguments and print help if needed.
         try {
