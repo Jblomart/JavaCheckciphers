@@ -191,6 +191,18 @@ public class Checkciphers
         cafile = in_cafile;
     }
 
+    /** 
+     * helpder function used for unit testing.
+     * 
+     * <P> Set CA certificate file
+     * 
+     * @param in_cafile <code>String</code> Path to CA certificate.
+     */
+    public void unsetCa() {
+        customca = Boolean.FALSE;
+        cafile = null;
+    }
+
     /**
      * helper function used for unit testing.
      * 

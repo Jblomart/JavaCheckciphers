@@ -131,10 +131,18 @@ public class CheckciphersTest {
     
     @Before
     public void setup() {
+        try {
+            (new SelfSignedCertificate()).createCertificateFile("dummy.crt");
+        } catch (Exception e) {
+            fail("Could not create dummy self signed certificate (" + e + ").");
+        }
     }
 
     @After
     public void unset() {
+        try {
+            (new File("dummy.crt")).delete();
+        } catch (Exception e) { }
     }
 
     /**
@@ -220,11 +228,6 @@ public class CheckciphersTest {
      */
     @Test
     public void doCheckShowsSuccessFullCustomCaCert() {
-        try {
-            (new SelfSignedCertificate()).createCertificateFile("dummy.crt");
-        } catch (Exception e) {
-            fail("Could not create dummy self signed certificate (" + e + ").");
-        }
         cipherschecker.setServer("github.com");
         cipherschecker.setCa("dummy.crt");
         CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
@@ -233,8 +236,7 @@ public class CheckciphersTest {
         try {
             output.acquire();
         } catch (InterruptedException e) {}
-        (new File("dummy.crt")).delete();
-        cipherschecker.setCa(null);
+        cipherschecker.unsetCa();
         assertThat(output.getOutput(), containsString("    Certificate subject Principal : "));
         assertThat(output.getOutput(), containsString("    Certificate Subject Alertnate Names : "));
         assertThat(output.getOutput(), containsString("    Certificate Issuer : "));
