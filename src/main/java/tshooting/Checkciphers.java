@@ -29,6 +29,7 @@ import java.util.Arrays;
 
 import java.net.ConnectException;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 import javax.net.ssl.HandshakeCompletedEvent;
@@ -49,13 +50,29 @@ import java.security.cert.Certificate;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 
+/**
+* Handler for tls handshakes.
+* 
+* <P>Updates results with TLS version used and peer certificates.
+*  
+@author Jerome Blomart
+@version 0.1
+*/
 final class HandShakeListener implements HandshakeCompletedListener {
     CheckResult result;
 
+    /**
+     * Constructor 
+     * 
+     * @param result <code>CheckResult</code> CheckResult object to store request results.
+     */
     public HandShakeListener(CheckResult result) {
         this.result = result;
     }
 
+    /**
+     * Handshake completed listener. Updates results and releases Semaphore.
+     */
     @Override
     public void handshakeCompleted(HandshakeCompletedEvent hce) {
         if (!this.result.getSummary() && this.result.getVerbose()) {
@@ -69,7 +86,7 @@ final class HandShakeListener implements HandshakeCompletedListener {
                         this.result.appendOutputStr("  ----");
                     }
                     this.result.appendOutputStr("    Peer Certificate subject Principal : " + pcert.getSubjectX500Principal());
-                    this.result.appendOutputStr("    Peer Certificate Subject Alertnate Names :" + pcert.getSubjectAlternativeNames());
+                    this.result.appendOutputStr("    Peer Certificate Subject Alertnate Names : " + pcert.getSubjectAlternativeNames());
                     this.result.appendOutputStr("    Peer Certificate Issuer : " + pcert.getIssuerX500Principal());
                     this.result.appendOutputStr("    Peer Certificate Valid From : " + pcert.getNotBefore());
                     this.result.appendOutputStr("    Peer Certificate Valid To : " + pcert.getNotAfter());
@@ -107,31 +124,80 @@ public class Checkciphers
     static X509Certificate[] certs = null;
     static TreeMap<String,List<String>> results = new TreeMap<String,List<String>>();
 
+    /**
+     * helper function used for unit testing.
+     * 
+     * <P> Set server 
+     * 
+     * @param in_server <code>String</code> Server name or ip address.
+     */
     public void setServer(String in_server) {
         server = in_server;
     }
 
+    /**
+     * helper function used for unit testing.
+     * 
+     * <P> Set port
+     * 
+     * @param in_port <code>Integer</code> Tcp port.
+     */
     public void setPort(Integer in_port) {
         port = in_port;
     }
 
+    /**
+     * helper function used for unit testing.
+     * 
+     * <P> Set untrusted ssl connection
+     * 
+     * @param in_untrusted <code>Boolean</code> Do (not) validate certificates on ssl connection.
+     */
     public void setUntrusted(Boolean in_untrusted) {
         untrusted = in_untrusted;
     }
 
+    /**
+     * helper function used for unit testing.
+     * 
+     * <P> Set endpointIdentification
+     * 
+     * @param in_endpointIdentification <code>Boolean</code> Do (not) validate endpoint identification.
+     */
     public void setendpointIdentification(Boolean in_endpointIdentification) {
         nohostnameval = in_endpointIdentification;
     }
 
+    /**
+     * helper function used for unit testing.
+     * 
+     * <P> Set tls version
+     * 
+     * @param in_tlsversion <code>String</codde> Tls version string to use.
+     */
     public void setTlsVersion(String in_tlsversion) {
         tlsversion = in_tlsversion;
     }
 
+    /** 
+     * helpder function used for unit testing.
+     * 
+     * <P> Set CA certificate file
+     * 
+     * @param in_cafile <code>String</code> Path to CA certificate.
+     */
     public void setCa(String in_cafile) {
         customca = Boolean.TRUE;
         cafile = in_cafile;
     }
 
+    /**
+     * helper function used for unit testing.
+     * 
+     * <P> Set timeout
+     * 
+     * @param in_timeout <code>Integer</code> Timeout in ms for socket connection.
+     */
     public void setTimeout(Integer in_timeout) {
         timeout = in_timeout;
     }
@@ -515,6 +581,15 @@ public class Checkciphers
                     // Could resolve host for provided server. Exit completely , no need to check other ciphers it's dead.
                     if (output.getVerbose()) {
                         output.appendOutputStr("  Could not resolve " + server + ".");
+                        output.appendOutputStr("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
+                    } else {
+                        output.appendOutputStr("  Failed to connect. (" + exception + ")");
+                    }
+                    output.setFatalException();
+                } catch (SocketTimeoutException exception) {
+                    // Could resolve host for provided server. Exit completely , no need to check other ciphers it's dead.
+                    if (output.getVerbose()) {
+                        output.appendOutputStr("  Timeout connecting to " + server + ".");
                         output.appendOutputStr("  Exception : " + convertStackTraceToString(exception).replace("\n","\n  "));
                     } else {
                         output.appendOutputStr("  Failed to connect. (" + exception + ")");
