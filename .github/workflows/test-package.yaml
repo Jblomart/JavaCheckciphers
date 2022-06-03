@@ -20,4 +20,6 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: github-actions-artifact
-          path: target
+          path: |
+            target/*.jar
+            !target/original*.jar
