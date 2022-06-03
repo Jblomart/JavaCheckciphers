@@ -519,7 +519,9 @@ public class Checkciphers
 
                     // Write outputs to output string.
                     if (!output.getSummary()) {
+                        output.acquire();
                         output.appendOutputStr("  Successfully connected.");
+                        output.release();
                     } else {
                         if (results.get("Successfully connected") != null) {
                             results.get("Successfully connected").add(cipherstr);
