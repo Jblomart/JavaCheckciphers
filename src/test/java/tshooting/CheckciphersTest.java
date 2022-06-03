@@ -234,6 +234,7 @@ public class CheckciphersTest {
             output.acquire();
         } catch (InterruptedException e) {}
         (new File("dummy.crt")).delete();
+        cipherschecker.setCa(null);
         assertThat(output.getOutput(), containsString("    Certificate subject Principal : "));
         assertThat(output.getOutput(), containsString("    Certificate Subject Alertnate Names : "));
         assertThat(output.getOutput(), containsString("    Certificate Issuer : "));
