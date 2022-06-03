@@ -217,7 +217,7 @@ public class CheckciphersTest {
             output.acquire();
         } catch (InterruptedException e) {}
         assertThat(output.getOutput(), containsString("    Peer Certificate subject Principal : "));
-        assertThat(output.getOutput(), containsString("    Peer Certificate Subject Alertnate Names : "));
+        assertThat(output.getOutput(), containsString("    Peer Certificate Subject Alternate Names : "));
         assertThat(output.getOutput(), containsString("    Peer Certificate Issuer : "));
         assertThat(output.getOutput(), containsString("    Peer Certificate Valid From : "));
         assertThat(output.getOutput(), containsString("    Peer Certificate Valid To : "));
@@ -238,7 +238,7 @@ public class CheckciphersTest {
         } catch (InterruptedException e) {}
         cipherschecker.unsetCa();
         assertThat(output.getOutput(), containsString("    Certificate subject Principal : "));
-        assertThat(output.getOutput(), containsString("    Certificate Subject Alertnate Names : "));
+        assertThat(output.getOutput(), containsString("    Certificate Subject Alternate Names : "));
         assertThat(output.getOutput(), containsString("    Certificate Issuer : "));
         assertThat(output.getOutput(), containsString("    Certificate Valid From : "));
         assertThat(output.getOutput(), containsString("    Certificate Valid To : "));

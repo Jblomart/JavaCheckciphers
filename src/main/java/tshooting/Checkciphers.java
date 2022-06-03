@@ -86,7 +86,7 @@ final class HandShakeListener implements HandshakeCompletedListener {
                         this.result.appendOutputStr("  ----");
                     }
                     this.result.appendOutputStr("    Peer Certificate subject Principal : " + pcert.getSubjectX500Principal());
-                    this.result.appendOutputStr("    Peer Certificate Subject Alertnate Names : " + pcert.getSubjectAlternativeNames());
+                    this.result.appendOutputStr("    Peer Certificate Subject Alternate Names : " + pcert.getSubjectAlternativeNames());
                     this.result.appendOutputStr("    Peer Certificate Issuer : " + pcert.getIssuerX500Principal());
                     this.result.appendOutputStr("    Peer Certificate Valid From : " + pcert.getNotBefore());
                     this.result.appendOutputStr("    Peer Certificate Valid To : " + pcert.getNotAfter());
@@ -470,7 +470,7 @@ public class Checkciphers
                         if (!output.getSummary() && output.getVerbose()) {
                             output.appendOutputStr("  Custom CA provided : using only provided CA for Certificate validation.");
                             output.appendOutputStr("    Certificate subject Principal : " + certs[0].getSubjectX500Principal());
-                            output.appendOutputStr("    Certificate Subject Alertnate Names : " + certs[0].getSubjectAlternativeNames());
+                            output.appendOutputStr("    Certificate Subject Alternate Names : " + certs[0].getSubjectAlternativeNames());
                             output.appendOutputStr("    Certificate Issuer : " + certs[0].getIssuerX500Principal());
                             output.appendOutputStr("    Certificate Valid From : " + certs[0].getNotBefore());
                             output.appendOutputStr("    Certificate Valid To : " + certs[0].getNotAfter());
