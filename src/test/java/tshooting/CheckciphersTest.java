@@ -11,10 +11,10 @@ package tshooting;
 import org.junit.Ignore;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.junit.Assert.*;
 import java.util.AbstractMap;
 import java.util.Map.Entry;
-import java.util.regex.Pattern;
 
 /**
 * CheckCiphers Unit Tests .
@@ -42,7 +42,7 @@ public class CheckciphersTest {
     }
     
     /**
-     * Tests that connecting to a github.com using specific cipher succeeds.
+     * Tests that connecting to github.com using specific cipher succeeds.
      */
     @Test
     public void doCheckShowsSuccess() {
@@ -120,7 +120,7 @@ public class CheckciphersTest {
             output.acquire();
         } catch (InterruptedException e) {}
         cipherschecker.setTimeout(1000);
-        assertThat(output.getOutput(), containsString("Exception : java.net.SocketTimeoutException: Read timed out"));
+        assertThat(output.getOutput(), anyOf(containsString("Exception : java.net.SocketTimeoutException: Read timed out"), containsString("Exception : javax.net.ssl.SSLException: Read timed out")));
     }
 
     /**
