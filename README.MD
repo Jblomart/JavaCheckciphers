@@ -20,4 +20,6 @@ Arguments :
 -h|--help                       optional        Print this help message.
 --no-endpoint-identification    optional        Do not check dns name or Certificate Subject Alternative Names.
 --summary                       optional        Output summary only.
+--timeout                       optional        Timeout for connections in ms. Default value 1000 ms.
+--chiphers-exclude              optional        Exclude expression (comma separated values) from ciphers list.
 ```

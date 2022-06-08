@@ -432,7 +432,7 @@ public class Checkciphers
         System.out.println("--no-endpoint-identification\toptional\tDo not check dns name or Certificate Subject Alternative Names.");
         System.out.println("--summary\t\t\toptional\tOutput summary only.");
         System.out.println("--timeout\t\t\toptional\tTimeout for connections in ms. Default value 1000 ms.");
-        System.out.println("--chiphers-exclude\t\t\toptional\tExclude expression (comma separated values) from ciphers list.");
+        System.out.println("--chiphers-exclude\t\toptional\tExclude expression (comma separated values) from ciphers list.");
     }
 
     /**
