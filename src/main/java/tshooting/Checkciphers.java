@@ -694,8 +694,9 @@ public class Checkciphers
      * 
      * @param args <code>String[]</code> Command line arguments.
      */
-    public void main(String[] args)
+    public static void main(String[] args)
     {
+        Checkciphers cipherchecker = new Checkciphers();
         // parse the command line arguments and print help if needed.
         try {
             checkargs(args);
@@ -706,6 +707,6 @@ public class Checkciphers
             System.exit(1);
         }
         // do the ciphers checks
-        dochecks();
+        cipherchecker.dochecks();
     }
 }
