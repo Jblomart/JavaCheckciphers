@@ -123,7 +123,7 @@ public class Checkciphers
     static TreeMap<String, Boolean> ciphers = new TreeMap<String, Boolean>();
     static X509Certificate[] certs = null;
     static TreeMap<String,List<String>> results = new TreeMap<String,List<String>>();
-
+    static String[] ciphersexcludeexpr = null;
     /**
      * helper function used for unit testing.
      * 
@@ -396,6 +396,14 @@ public class Checkciphers
                             }
                             i+=1;
                             break;
+                        case "chiphers-exclude":
+                            if (args.length > i && args[i+1].charAt(0) != '-') {
+                                ciphersexcludeexpr = args[i+1].split(",");
+                            } else {
+                                throw new IllegalArgumentException("Server argument needs an string input. No input found.");
+                            }
+                            i+=1;
+                            break;
                         default:
                             throw new IllegalArgumentException("Unexpected argument " + arg + ".");
                     }
@@ -424,6 +432,7 @@ public class Checkciphers
         System.out.println("--no-endpoint-identification\toptional\tDo not check dns name or Certificate Subject Alternative Names.");
         System.out.println("--summary\t\t\toptional\tOutput summary only.");
         System.out.println("--timeout\t\t\toptional\tTimeout for connections in ms. Default value 1000 ms.");
+        System.out.println("--chiphers-exclude\t\t\toptional\tExclude expression (comma separated values) from ciphers list.");
     }
 
     /**
@@ -655,6 +664,15 @@ public class Checkciphers
         // check each ciphers listed.
         for(Iterator<Map.Entry<String,Boolean>> i = ciphers.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry<String,Boolean> cipher=(Map.Entry<String,Boolean>) i.next();
+            if (ciphersexcludeexpr != null) {
+                Boolean excluded = Boolean.FALSE;
+                for (Integer j = 0; j <  ciphersexcludeexpr.length; j++) {
+                    excluded = excluded || ((String) cipher.getKey()).contains(ciphersexcludeexpr[j]);
+                }
+                if (excluded) {
+                    continue;
+                }
+            }
             CheckResult output = new CheckResult(summary, verbose, timeout);
             docheck(cipher,output);
             try {
