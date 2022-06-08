@@ -645,10 +645,16 @@ public class Checkciphers
         // list available and default ciphers.
         String[] defaultCiphers = ssf.getDefaultCipherSuites();
         String[] availableCiphers = ssf.getSupportedCipherSuites();
-        for(int i=0; i<availableCiphers.length; ++i )
+        for(int i=0; i<availableCiphers.length; ++i ) {
+            if (availableCiphers[i].equals("TLS_EMPTY_RENEGOTIATION_INFO_SCSV")) continue;
             ciphers.put(availableCiphers[i], Boolean.FALSE);
-        for(int i=0; i<defaultCiphers.length; ++i )
+        }
+            
+        for(int i=0; i<defaultCiphers.length; ++i ) {
+            if (defaultCiphers[i].equals("TLS_EMPTY_RENEGOTIATION_INFO_SCSV")) continue;
             ciphers.put(defaultCiphers[i], Boolean.TRUE);
+        }
+            
 
         // if no servers is given just list ciphers.
         if (server == null) {
