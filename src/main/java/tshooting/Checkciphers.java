@@ -315,7 +315,7 @@ public class Checkciphers
                                 if (allowedtlsversions.contains(args[i+1])) {
                                     tlsversion = args[i+1];
                                 } else {
-                                    throw new IllegalArgumentException("TlsVersion argument needs an String input equal to either SSLv3, TLSv1, TLSv1.1, TLSv1.2.");
+                                    throw new IllegalArgumentException("TlsVersion argument needs an String input equal to either SSLv3, TLSv1, TLSv1.1, TLSv1.2, TLSv1.3.");
                                 }
                             } else {
                                 throw new IllegalArgumentException("TlsVersion argument needs an String input equal to either SSLv3, TLSv1, TLSv1.1, TLSv1.2. No input found.");
@@ -424,7 +424,7 @@ public class Checkciphers
         System.out.println("Arguments :");
         System.out.println("-s|--server <value>\t\toptional\tDns name or Ip Address of the server to test ciphers against.");
         System.out.println("-p|--port <value>\t\toptional\tTCP port to use to connect to the server. Default value is 443.");
-        System.out.println("-t|--tlsversion <value>\t\toptional\tTls version to use for handshake. Possible values are SSLv3, TLSv1, TLSv1.1, TLSv1.2.");
+        System.out.println("-t|--tlsversion <value>\t\toptional\tTls version to use for handshake. Possible values are SSLv3, TLSv1, TLSv1.1, TLSv1.2. TLSv1.3.");
         System.out.println("-c|--ca <value>\t\t\toptional\tCA certificate in X509 format to use for validating Server Certificate.");
         System.out.println("-u|--untursted\t\t\toptional\tDo not validate Server Certificate.");
         System.out.println("-v|--verbose\t\t\toptional\tUse verbose logging.");
