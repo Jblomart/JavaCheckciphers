@@ -10,6 +10,7 @@ package tshooting;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -245,9 +246,26 @@ public class CheckciphersTest {
     }
 
     /**
+     * Tests that connecting to github with TLSv1.3 and either TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384 or TLS_CHACHA20_POLY1305_SHA256 succeeds
+     */
+    @Ignore
+    @Test
+    public void doCheckShowsSuccessTls13() {
+        cipherschecker.setServer("github.com");
+        cipherschecker.setTlsVersion("TLSv1.3");
+        CheckResult output = new CheckResult(Boolean.FALSE, Boolean.TRUE, 1000);
+        Entry<String,Boolean> cipher = new AbstractMap.SimpleEntry<String,Boolean>("TLS_AES_128_GCM_SHA256",Boolean.TRUE);
+        cipherschecker.docheck(cipher,output);
+        try {
+            output.acquire();
+        } catch (InterruptedException e) {}
+        cipherschecker.setTlsVersion("TLSv1.2");
+        assertThat(output.getOutput(), containsString("Successfully connected."));
+    }
+
+    /**
      * Tests that connecting to github with a low timeout ends with read timeout.
      */
-    
     @Test
     public void doCheckShowsTimeoutFailure() {
         cipherschecker.setServer("github.com");
