@@ -115,7 +115,7 @@ public class Checkciphers
     static Boolean untrusted = Boolean.FALSE;
     static Boolean nohostnameval = Boolean.FALSE;
     static Integer port = 443;
-    static List<String> allowedtlsversions = Arrays.asList(new String[] { "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2" });
+    static List<String> allowedtlsversions = Arrays.asList(new String[] { "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3" });
     static String tlsversion = null;
     static String cafile = null;
     static Boolean customca = Boolean.FALSE;
