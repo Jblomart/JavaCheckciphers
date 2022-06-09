@@ -396,7 +396,7 @@ public class Checkciphers
                             }
                             i+=1;
                             break;
-                        case "chiphers-exclude":
+                        case "ciphers-exclude":
                             if (args.length > i && args[i+1].charAt(0) != '-') {
                                 ciphersexcludeexpr = args[i+1].split(",");
                             } else {
@@ -424,7 +424,7 @@ public class Checkciphers
         System.out.println("Arguments :");
         System.out.println("-s|--server <value>\t\toptional\tDns name or Ip Address of the server to test ciphers against.");
         System.out.println("-p|--port <value>\t\toptional\tTCP port to use to connect to the server. Default value is 443.");
-        System.out.println("-t|--tlsversion <value>\t\toptional\tTls version to use for handshake. Possible values are SSLv3, TLSv1, TLSv1.1, TLSv1.2. TLSv1.3.");
+        System.out.println("-t|--tlsversion <value>\t\toptional\tTls version to use for handshake. Possible values are SSLv3, TLSv1, TLSv1.1, TLSv1.2, TLSv1.3.");
         System.out.println("-c|--ca <value>\t\t\toptional\tCA certificate in X509 format to use for validating Server Certificate.");
         System.out.println("-u|--untursted\t\t\toptional\tDo not validate Server Certificate.");
         System.out.println("-v|--verbose\t\t\toptional\tUse verbose logging.");
@@ -432,7 +432,7 @@ public class Checkciphers
         System.out.println("--no-endpoint-identification\toptional\tDo not check dns name or Certificate Subject Alternative Names.");
         System.out.println("--summary\t\t\toptional\tOutput summary only.");
         System.out.println("--timeout\t\t\toptional\tTimeout for connections in ms. Default value 1000 ms.");
-        System.out.println("--chiphers-exclude\t\toptional\tExclude expression (comma separated values) from ciphers list.");
+        System.out.println("--ciphers-exclude\t\toptional\tExclude expression (comma separated values) from ciphers list.");
     }
 
     /**
